@@ -125,10 +125,10 @@ criterion = nn.CrossEntropyLoss().to(device)
 optimizer = optim.Adam(model.parameters(), lr=0.01, weight_decay=5e-4)
 model.train()
 
-# gpu_data = list(nvsmi.get_gpus())[0]
-# start_gpu_util = gpu_data.gpu_util
-# start_gpu_mem_use = gpu_data.mem_used
-# total_gpu_mem = gpu_data.mem_total
+gpu_data = list(nvsmi.get_gpus())[0]
+start_gpu_util = gpu_data.gpu_util
+start_gpu_mem_use = gpu_data.mem_used
+total_gpu_mem = gpu_data.mem_total
 disk_io_counter = psutil.disk_io_counters()
 disk_total = disk_io_counter[2] + disk_io_counter[3]  # read_bytes + write_bytes
 p = psutil.Process()
@@ -141,13 +141,13 @@ t_status = True
 
 
 def get_gpu_info():
-    # gpu_data = list(nvsmi.get_gpus())[0]
+    gpu_data = list(nvsmi.get_gpus())[0]
     while True:
         if not t_status:
             break
-        # group_gpu_util.append(gpu_data.gpu_util)
-        # group_gpu_mem_use.append(gpu_data.mem_used)
-        # group_mem_rss.append(psutil.Process(os.getpid()).memory_info().rss)
+        group_gpu_util.append(gpu_data.gpu_util)
+        group_gpu_mem_use.append(gpu_data.mem_used)
+        group_mem_rss.append(psutil.Process(os.getpid()).memory_info().rss)
         io_counters = p.io_counters()
         disk_usage = io_counters[2] + io_counters[3]
         group_disk_usage.append(disk_usage)  # read_bytes + write_bytes
@@ -182,11 +182,11 @@ for epoch in range(200):
 t_status = False
 t.join()
 
-# print(f"GPU 显存占用: {np.mean(group_gpu_mem_use)}Mb")
-# print(f"GPU 显存占用率: {np.mean(group_gpu_mem_use) * 100 / total_gpu_mem}%")
-# print(f"GPU 平均使用率: {np.mean(group_gpu_util) - start_gpu_util}%")
-# tmp_ = sum(np.where(np.array(group_gpu_util) - start_gpu_util > 1, True, False))
-# print(f"GPU 空闲率: {(len(group_gpu_util) - tmp_) * 100 / len(group_gpu_util)}%")
+print(f"GPU 显存占用: {np.mean(group_gpu_mem_use)}Mb")
+print(f"GPU 显存占用率: {np.mean(group_gpu_mem_use) * 100 / total_gpu_mem}%")
+print(f"GPU 平均使用率: {np.mean(group_gpu_util) - start_gpu_util}%")
+tmp_ = sum(np.where(np.array(group_gpu_util) - start_gpu_util > 1, True, False))
+print(f"GPU 空闲率: {(len(group_gpu_util) - tmp_) * 100 / len(group_gpu_util)}%")
 print(f'内存使用：{np.mean(group_mem_rss) / 1024 / 1024 / 1024:.4f} GB')
 print(f'磁盘IO使用：{np.mean(group_disk_usage) / 1024 / 1024 / 1024:.4f} GB/s')
 print(f'磁盘IO使用率：{np.mean(group_disk_usage) * 100 / disk_total:.4f}%')
