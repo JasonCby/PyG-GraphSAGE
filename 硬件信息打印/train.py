@@ -1,3 +1,5 @@
+import builtins
+
 import nvsmi
 import threading
 # pynvml.nvmlInit()
@@ -7,13 +9,16 @@ import time
 import numpy as np
 import psutil
 import os
+from torch_geometric.datasets import Reddit
+from tqdm import tqdm
 
-dataset_cora = Planetoid(root='./cora/', name='Cora')
+dataset = Planetoid(root='./cora/', name='Cora')
 # dataset = Planetoid(root='./citeseer',name='Citeseer')
 # dataset = Planetoid(root='./pubmed/',name='Pubmed')
-print(dataset_cora)
+# dataset = Reddit(root='./reddit/')
+print(dataset)
 
-dataset = dataset_cora
+dataset = dataset
 
 import torch
 import torch.nn as nn
@@ -42,13 +47,13 @@ batch_size = 128
 epoch_num = 20
 
 # pre-load Planetoid
-dataset_test = Planetoid(root="./cora/", name='Cora')
+# dataset_test = Planetoid(root="./cora/", name='Cora')
 # dataset_test = Planetoid(root=path_Cora, name='Cora')
 # the dataset for test is shown below (different from the above)
 # dataset_test = Planetoid(root='./data/Cora/', name='Cora')
-
-
-dataset = dataset_test
+# dataset_test = Reddit(root='./reddit/')
+#
+# dataset = dataset_test
 
 data = dataset[0]  # Get the first graph object.
 from torch_geometric.data import ClusterData, ClusterLoader, DataLoader
@@ -58,6 +63,7 @@ cluster_data = ClusterData(data, num_parts=128)  # 1. Create subgraphs.
 train_loader = ClusterLoader(cluster_data, batch_size=batch_size,
                              shuffle=True)  # 2. Stochastic partitioning scheme.
 
+print(train_loader)
 
 class SAGENet(nn.Module):
     def __init__(self):
@@ -110,14 +116,14 @@ class GCNNet(torch.nn.Module):
 
 model = SAGENet()
 print(model)
-model = GATNet()
-print(model)
-model = GCNNet()
-print(model)
+# model = GATNet()
+# print(model)
+# model = GCNNet()
+# print(model)
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 print(device)
 model.to(device)
-data = dataset_cora[0].to(device)
+data = dataset[0].to(device)
 print(data)
 import torch.optim as optim
 
@@ -156,7 +162,7 @@ def get_gpu_info():
         except:
             a = 0
         group_iowait.append(a)
-        print(f"{disk_usage / 1024 / 1024} Mb/s")
+        # print(f"{disk_usage / 1024 / 1024} Mb/s")
         time.sleep(0.09)
 
 
@@ -170,7 +176,28 @@ for epoch in range(200):
     optimizer.zero_grad()
     loss.backward()
     optimizer.step()
-
+    # pbar = tqdm(total=int(len(train_loader)))
+    # pbar.set_description(f'Epoch {epoch:02d}')
+    # for data, i in train_loader, len(train_loader):
+    #     data = data.to(device)
+    #     model.train()
+    #     out = model(data)
+    #     optimizer.zero_grad()
+    #     loss = criterion(model(data.x, data.edge_index), data.y)
+    #     # total_loss += float(loss.item())
+    #     loss.backward()
+    #     optimizer.step()
+    #     pbar.update(i)
+    #
+    #     _, pred = torch.max(out[data.train_mask], dim=1)
+    #     correct = (pred == data.y[data.train_mask]).sum().item()
+    #     # print(correct)
+    #     acc = correct / data.train_mask.sum().item()
+    #     # print(data.train_mask.sum())
+    #
+    #     print('Epoch {:03d} train_loss: {:.4f} train_acc: {:.4f}'.format(
+    #         epoch, loss.item(), acc))
+    # pbar.close()
     _, pred = torch.max(out[data.train_mask], dim=1)
     correct = (pred == data.y[data.train_mask]).sum().item()
     # print(correct)
@@ -179,13 +206,14 @@ for epoch in range(200):
 
     print('Epoch {:03d} train_loss: {:.4f} train_acc: {:.4f}'.format(
         epoch, loss.item(), acc))
+
 t_status = False
 t.join()
 
 print(f"GPU 显存占用: {np.mean(group_gpu_mem_use)}Mb")
 print(f"GPU 显存占用率: {np.mean(group_gpu_mem_use) * 100 / total_gpu_mem}%")
 print(f"GPU 平均使用率: {np.mean(group_gpu_util) - start_gpu_util}%")
-tmp_ = sum(np.where(np.array(group_gpu_util) - start_gpu_util > 1, True, False))
+tmp_ = builtins.sum(np.where(np.array(group_gpu_util) - start_gpu_util > 1, True, False))
 print(f"GPU 空闲率: {(len(group_gpu_util) - tmp_) * 100 / len(group_gpu_util)}%")
 print(f'内存使用：{np.mean(group_mem_rss) / 1024 / 1024 / 1024:.4f} GB')
 print(f'磁盘IO使用：{np.mean(group_disk_usage) / 1024 / 1024 / 1024:.4f} GB/s')
