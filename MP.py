@@ -187,7 +187,7 @@ class MessagePassing(torch.nn.Module):
 
         return out
 
-    # propagate分别会调用message、aggregate、update
+    # propagate call message、aggregate、update
     def propagate(self, edge_index: Adj, size: Size = None, **kwargs):
         r"""The initial call to start propagating messages.
         Args:
