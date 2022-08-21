@@ -131,10 +131,10 @@ criterion = nn.CrossEntropyLoss().to(device)
 optimizer = optim.Adam(model.parameters(), lr=0.01, weight_decay=5e-4)
 model.train()
 
-gpu_data = list(nvsmi.get_gpus())[0]
-start_gpu_util = gpu_data.gpu_util
-start_gpu_mem_use = gpu_data.mem_used
-total_gpu_mem = gpu_data.mem_total
+# gpu_data = list(nvsmi.get_gpus())[0]
+# start_gpu_util = gpu_data.gpu_util
+# start_gpu_mem_use = gpu_data.mem_used
+# total_gpu_mem = gpu_data.mem_total
 disk_io_counter = psutil.disk_io_counters()
 disk_total = disk_io_counter[2] + disk_io_counter[3]  # read_bytes + write_bytes
 p = psutil.Process()
