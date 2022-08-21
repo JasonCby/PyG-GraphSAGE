@@ -7,7 +7,7 @@
 #include <error.h>  
 #include<string.h>  
 #include <stdbool.h>
-
+#include <sys/time.h>
 
 char *creatMMap(const char * filename,struct stat **sb);
 char *readMMap(const char * filename, long start,long length) ;
@@ -43,14 +43,18 @@ char *readMMap(const char * filename, long start,long length) // start :开始�
     struct stat sb;  
     
     struct stat* insb = &sb;
-    
+    struct timeval tv;
+    struct timeval tv1;
+    gettimeofday(&tv, NULL);
     char *mapped = creatMMap(filename,&insb);
+    gettimeofday(&tv1, NULL);
 
+    printf("Loading time: %ld micro second", tv1.tv_usec-tv.tv_usec);
     // memcpy(dest,mapped+start,length);
      
     // printf("read =========================\n"); 
     
-    // printf("%s\n",dest); 
+    // printf("%s\n",mapped); 
     
     // if ((munmap((void *)mapped, sb.st_size)) == -1) {  
     //     perror("munmap");  
@@ -101,10 +105,10 @@ int main(int argc, char **argv)
     
     // read memory map   
     // char readmap[5000]={0};
-    printf("read =========================\n"); 
-    char * m = readMMap("/mnt/mem/cora.cites", 0, 5000);
-    printf("%s", m);
-    closemmap(m);
+    //printf("read =========================\n"); 
+    //char * m = readMMap("/mnt/mem/cora.content", 0, 2000000);
+    // printf("%s", m);
+    // closemmap(m);
 
     // /* 修改,同步到磁盘文件 */  
     // char newStr[128]="123456\n";
