@@ -131,10 +131,10 @@ criterion = nn.CrossEntropyLoss().to(device)
 optimizer = optim.Adam(model.parameters(), lr=0.01, weight_decay=5e-4)
 model.train()
 
-# gpu_data = list(nvsmi.get_gpus())[0]
-# start_gpu_util = gpu_data.gpu_util
-# start_gpu_mem_use = gpu_data.mem_used
-# total_gpu_mem = gpu_data.mem_total
+gpu_data = list(nvsmi.get_gpus())[0]
+start_gpu_util = gpu_data.gpu_util
+start_gpu_mem_use = gpu_data.mem_used
+total_gpu_mem = gpu_data.mem_total
 disk_io_counter = psutil.disk_io_counters()
 disk_total = disk_io_counter[2] + disk_io_counter[3]  # read_bytes + write_bytes
 p = psutil.Process()
@@ -147,10 +147,11 @@ t_status = True
 
 
 def get_gpu_info():
-    gpu_data = list(nvsmi.get_gpus())[0]
+
     while True:
         if not t_status:
             break
+        gpu_data = list(nvsmi.get_gpus())[0]
         group_gpu_util.append(gpu_data.gpu_util)
         group_gpu_mem_use.append(gpu_data.mem_used)
         group_mem_rss.append(psutil.Process(os.getpid()).memory_info().rss)
@@ -165,7 +166,7 @@ def get_gpu_info():
         # print(f"{disk_usage / 1024 / 1024} Mb/s")
         time.sleep(0.09)
 
-
+start_timme = time.time()
 for epoch in range(200):
     if epoch == 1:
         t = threading.Thread(target=get_gpu_info)
@@ -209,7 +210,7 @@ for epoch in range(200):
 
 t_status = False
 t.join()
-
+end_time = time.time()
 print(f"GPU 显存占用: {np.mean(group_gpu_mem_use)}Mb")
 print(f"GPU 显存占用率: {np.mean(group_gpu_mem_use) * 100 / total_gpu_mem}%")
 print(f"GPU 平均使用率: {np.mean(group_gpu_util) - start_gpu_util}%")
@@ -226,3 +227,4 @@ _, pred = torch.max(out[data.test_mask], dim=1)
 correct = (pred == data.y[data.test_mask]).sum().item()
 acc = correct / data.test_mask.sum().item()
 print("test_loss: {:.4f} test_acc: {:.4f}".format(loss.item(), acc))
+print("Total training time:", end_time -start_timme)
