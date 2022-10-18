@@ -21,3 +21,5 @@ Project structure:
 + MP.py  SAGEConv.py  ------------   Customized SageConv (adds the ability to return the time of each step during training)
 + SAGEWithCluster.ipynb ------------------- ClusterGCN experiments
 + SAGEWithoutCluster.ipynb ------------------- GraphSage experiments
+
+Report : Scaling Graph Neural Networks with Persistent.pdf
